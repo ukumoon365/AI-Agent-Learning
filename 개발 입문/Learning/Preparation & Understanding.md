@@ -73,9 +73,9 @@ LLM은 사용자로부터 받은 문장을 처리시 token 단위로 분해 처�
     - 설치
     1) python -m pip install streamlit
 ```
-![streamlit test](<image/streamlit test.png>)
+![streamlit test](<image/streamlit test.png>)[text](<Preparation & Understanding.md>)
 ```
-    3) python -m streamlit run ".\AI Agent Leaning\Streamlit_test.py"      
+    3) python -m streamlit run ".\개발 입문/test/streamlit_test.py      
 ```
 ![result](<image/streamlit test result.png>)
 ```
