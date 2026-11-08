@@ -67,17 +67,144 @@ st.sidebar.markdown(f"- Input cost: ${cost_input:.2f}")
     설정 항목을 미리 정의 가능
         ○ .configurable_fields로 정의
         ○ .with_config(configurable = { : })로 수정
-
 from langchain_core.runnables import ConfigurableField
 test_model = gemini(
     model="gemini-3.8-flash",
     temperature=0,
 ).configurable_fields(
     model=ConfigurableField(
-        id="model",
-        name="Model Name",
-        description="The model name of the LLM",
+        id="model", # 식별자 ( 설정을 구분하는 용도)
+        name="Model Name", # 설정 항목을 설명
+        description="The model name of the LLM", # 설명
     )
 )
 test_model = test_model.with_config(configurable={"model": "gemini-3.6-flash"})
+
+        ○ 모델 변경 configurableField 활용
+from langchain_google_genai import GoogleGenerativeAI
+from langchain_core.runnables import ConfigurableField
+from langchain_openai import ChatOpenAI
+
+test_model = ChatOpenAI(temperature=0).configurable_alternatives(
+    ConfigurableField(id="model"), 
+    default_key="openai", # 기본값 openai
+    google=GoogleGenerativeAI(temperature=0, modle="gemini-2.5-flash"))
+test_model.with_config(configurable={"model": "google"}) # 모델 gemini로 변경
+
+✅ 비슷한 처리를 여러 방식으로 분기해야 할 때 사용 고려
+
+    - Fallback
+    하나의 처리가 실패했을 때 다른 처리로 전환 기능
+        ○ .with_fallback으로 설정
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import GoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+
+prompt = PromptTemplate.from_template("이 주제로 농담을 해주세요: {topic}")
+chain = prompt | ChatOpenAI(temperature=0)
+google_chain = prompt | GoogleGenerativeAI(temperature=0, model="gemini-3.5-flash-lite")
+fallback_chain = chain.with_fallbacks([google_chain]) # openai가 미응답시 gemini로 fallback
+print(fallback_chain.invoke({"topic": "겨울"}))
+
+    - RunnableParallel
+    여러 개의 chain 병렬 실행
+        ○ RunnableParallel로 설정
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import GoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from langchain_core.runnables import RunnableParallel
+
+prompt = PromptTemplate.from_template("이 주제로 농담을 해주세요: {topic}")
+openai_chain = prompt | ChatOpenAI(temperature=0)
+google_chain = prompt | GoogleGenerativeAI(temperature=0, model="gemini-3.5-flash-lite")
+test_chain = RunnableParallel(openai=openai_chain, goole=google_chain) print(test_chain.invoke({"topic": "겨울"}))
+
+        ○ RunnablePassthrough
+        입력값을 다음 단계로 그대로 전달 or 넘기기 전에 임의의 처리 추가
+        ○ RunnablelLambda : 임의의 함수를 chain에 포함
+        ○ RunnableBranch: chain내에서 조긴 분기
+
+✔️ Streamlit 스트리밍 출력
+    - st.write_stream(): LLM 응답을 스트리밍 방식으로 출력
+with st.chat_message("assistant"):
+            response = st.write_stream(
+                chain.stream(
+                    {"history": st.session_state.message_history,
+                        "user_input": user_input,})
+)
+    - 스트리밍 출력 흐름
+    1) 과거 채팅 이력 표시 2) 스트리밍 출력으로 응답 출력 3) 채팅 이력에 응답 추가
+for msg in st.session_state.message_history: # 과거 채팅 이력 표시
+    st.chat_message(msg["role"]).markdown(msg["content"])
+if user_input := st.chat_input("궁금한 내용을 입력해주세요."): # 사용자 입력 모니터링
+    st.session_state.message_history.append({"role": "user", "content": user_input})
+    st.chat_message("user").markdown(user_input)
+    with st.chat_message("assistant"): # LLM응답 스트리밍 출력
+                response = st.write_stream(
+                    chain.stream(
+                        {"history": st.session_state.message_history,
+                            "user_input": user_input,})
+)
+        st.session_state.message_history.append( # 채팅 이력 추가
+            {"role": "assistant", "content": response})
+
+ ✔️ 모델 변경 기능
+temperature = st.sidebar.slider( # 모델 temperature 설정 변경 사이드 슬라이드바 추가
+        "Temperature:", min_value=0.0, max_value=2.0, value=0.0, step=0.1
+    )
+    models = ("GPT-5 mini", "GPT-5", "Claude Sonnet 4.5", "Gemini 2.5 Flash")
+    model = st.sidebar.radio("Choose a model:", models) # 모델 변경 사이드바 추가
+    
+    # 모델 변경 알고리즘
+    if model == "GPT-5 mini":
+        st.session_state.model_name = "gpt-5-mini"
+        return ChatOpenAI(
+            temperature=temperature,
+            model=st.session_state.model_name,
+        )
+    elif model == "GPT-5":
+        st.session_state.model_name = "gpt-5"
+        return ChatOpenAI(
+            temperature=temperature,
+            model=st.session_state.model_name,
+        )
+    elif model == "Claude Sonnet 4.5":
+        st.session_state.model_name = "claude-sonnet-4-5-20250929"
+        return ChatAnthropic(
+            temperature=temperature,
+            model=st.session_state.model_name,
+        )
+    elif model == "Gemini 2.5 Flash":
+        st.session_state.model_name = "gemini-2.5-flash"
+        return ChatGoogleGenerativeAI(
+            temperature=temperature,
+            model=st.session_state.model_name,
+        )
+
+✔️ API 호출 비용 파악 및 출력
+def calc_and_display_costs(): # 호출 비용 계산 함수
+    output_count = 0
+    input_count = 0
+
+    for msg in st.session_state.message_history:
+        token_count = get_message_counts(msg["content"])
+
+        if msg["role"] == "assistant":
+            output_count += token_count
+        else:
+            input_count += token_count
+
+    if not st.session_state.message_history:
+        return # 함수 종료 용도
+    
+    # 비용 계산
+    cost_input = MODEL_PRICES["input"][st.session_state.model_name] * input_count
+    cost_output = MODEL_PRICES["output"][st.session_state.model_name] * output_count
+    cost = cost_input + cost_output
+
+    # 호출 비용 사이드바 추가
+    st.sidebar.markdown("## Costs")
+    st.sidebar.markdown(f"**Total cost: ${cost:.5f}**")
+    st.sidebar.markdown(f"- Input cost: ${cost_input:.5f}")
+    st.sidebar.markdown(f"- Output cost: ${cost_output:.5f}")
 ```
