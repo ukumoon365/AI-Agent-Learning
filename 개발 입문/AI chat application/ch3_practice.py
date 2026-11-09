@@ -146,9 +146,3 @@ def Ai_chat():
 
 if __name__ == "__main__":
     Ai_chat()
-
-import os
-
-st.write("OPENAI:", bool(os.getenv("OPENAI_API_KEY")))
-st.write("ANTHROPIC:", bool(os.getenv("ANTHROPIC_API_KEY")))
-st.write("GOOGLE:", bool(os.getenv("GOOGLE_API_KEY")))
