@@ -26,7 +26,7 @@ def page_settings():
     model_name = st.session_state.get(
         "selected_model", "gemini-3.5-flash-lite")
     st.set_page_config(page_title="Practice AI Chat", page_icon="💬")
-    st.header("반갑습니다 연습용 AI Chat - " + model_name)
+    st.header(f"반갑습니다 연습용 AI Chat📝 - \n + {model_name}")
     st.sidebar.title("Options")
 
 
