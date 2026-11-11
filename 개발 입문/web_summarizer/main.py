@@ -20,7 +20,8 @@ SUMMARIZE_PROMPT = """
 ========
 {content}
 ========
-{selected_language}로 작성해 주세요!
+반드시 {selected_language}로만 작성해 주세요!
+다른 언어로 요약하지마세요.
 """
 
 ANSWER_PROMPT = """
