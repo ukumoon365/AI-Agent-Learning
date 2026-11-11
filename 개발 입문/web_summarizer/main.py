@@ -123,6 +123,9 @@ def main():
     summarizer_chain = init_summarizer_chain(llm)
     answer_chain = init_answer_chain(llm)
     clear_chat()
+    if st.button("다시 요약하기"):
+        st.session_state.previous_url = None
+    # st.write("현재 선택된 언어:", selected_language) # 언어 변경 확인용
 
 
     # URL입력 시 요약 수행
