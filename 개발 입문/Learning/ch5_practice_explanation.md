@@ -117,7 +117,7 @@ def get_content(url):
         ✅ Documment를 그대로 전달할 시 metadata도 문자열로 반환 후 전달됨 
 
     ✔️ load / load_and_split
-        - load: 설정된 소스에서 문서 전체를 하번에 불러온다
+        - load: 설정된 소스에서 문서 전체를 한번에 불러온다
         - load_and_split: 소스에서 문서를 불러온 후 적절한 크기로 텍스트를 나눔
 
     ✔️ Lazy load(지연 로딩)
