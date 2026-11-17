@@ -81,7 +81,7 @@ def get_content(url):
 ✔️ Youtube 영상의 자막 가져오기
     - YoutubeLoader
         # langchain_community.document_loaders에서 YoutubeLoader import
-        ✅ YoutubeLoader는 내부적ㅇ로 youtube-transcript-api / pytube를 사용 
+        ✅ YoutubeLoader는 내부적으로 youtube-transcript-api / pytube를 사용 
             -> 별도 설치 필요
             loader = YoutubeLoader.from_youtube_url(
                 url, 
