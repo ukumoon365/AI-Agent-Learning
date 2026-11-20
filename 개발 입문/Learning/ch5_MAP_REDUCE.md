@@ -70,3 +70,12 @@ def init_chain(summarize_chain):
         chunk_overlap = 0, # 요약에는 중복 불필요
     )
 ```
+# RunnableLambda
+    LangChain에 내장에 정의되지 않은 임의 함수를 chain에서 사용할 수 있도록 하는 기능
+ex)
+to_upper = RunnableLambda(to_upper): Lambda에 감싸서 사용
+to_upper = RunnableLambda(lambda x: {"content": x["content"].upper()}): Lambda식 사용
+
+✔️ .map()
+    -   체인 내부에서 리스트의 각 요소를 chain()에 적용하고 결과값을 다시 리스트로 반환
+    ✅ .batch(): 체인 외부에서 여러 입력을 한 번에 실행 ex) chain.batch(["input 1", "input 2" ....])
